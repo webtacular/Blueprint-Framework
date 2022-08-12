@@ -1,6 +1,6 @@
-import ConnectionManagerClass from "./main";
-import GUID from "./core/guid";
-import { ConnectionNode, ConnectionManager } from "./types";
+import ConnectionManagerClass from "../src";
+import GUID from "../src/core/guid";
+import { ConnectionNode, ConnectionManager } from "../src/types";
 
 const createNode = (
     mode: ConnectionNode.TMode,

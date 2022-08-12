@@ -5,10 +5,15 @@
     "module": "CommonJS",
     "target": "es5",
     "composite": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "outDir": "./dist"
   },
   "include": [
     "./src/*.ts",
     "./src/**/*.ts"
+, "tests/main.test.ts"  ],
+  "exclude": [
+    "tests/main.test.ts",
+    "./examples/*"
   ]
 }

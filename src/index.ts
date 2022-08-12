@@ -1,12 +1,21 @@
 import { ConnectionNode, ConnectionManager, Geometric } from './types';
-import GUID from './core/guid';
+import _GUID from './core/guid';
+
+export class GUID extends _GUID {}
 
 class ConnectionManager {
+    // #region | ----[ CONSTRUCTOR ]----
+    private readonly opts: ConnectionManager.IConstructor;
+    public constructor(opts: ConnectionManager.IConstructor) {
+        this.opts = opts;
+    }
+    // #endregion | ----[ CONSTRUCTOR ]----    
 
-    // ----[ HOOKS ]---- //
 
-    private startHooks: ConnectionManager.TEndHookMap = new Map();
-    private endHooks: ConnectionManager.TEndHookMap = new Map();
+    // #region | ----[ HOOKS ]----
+
+    private startHooks: ConnectionManager.TStartConnectionHookMap = new Map();
+    private endHooks: ConnectionManager.TEndConnectionHookMap = new Map();
     private lineHooks: ConnectionManager.TLineHookMap = new Map();
 
     private execStartHooks = (ref: ConnectionNode.TReferance) =>
@@ -33,8 +42,8 @@ class ConnectionManager {
 
         // -- Add the hook to the map
         switch (type) { 
-            case 'start': this.startHooks.set(id, hook as ConnectionManager.TStartHook); break;
-            case 'end'  : this.endHooks.set(  id, hook as   ConnectionManager.TEndHook); break;
+            case 'startConnection': this.startHooks.set(id, hook as ConnectionManager.TStartConnectionHook); break;
+            case 'endConnection'  : this.endHooks.set(  id, hook as   ConnectionManager.TEndConnectionHook); break;
             case 'line' : this.lineHooks.set( id, hook as  ConnectionManager.TLineHook); break;
         }
 
@@ -53,8 +62,8 @@ class ConnectionManager {
      */
     public getHook<E extends ConnectionManager.THookUnion>(type: ConnectionManager.THookType, id: GUID): E | null {
         switch (type) { 
-            case 'start': return this.startHooks.get(id) as E;
-            case 'end': return this.endHooks.get(id) as E;
+            case 'startConnection': return this.startHooks.get(id) as E;
+            case 'endConnection': return this.endHooks.get(id) as E;
             case 'line': return this.lineHooks.get(id) as E;    
         }
     }
@@ -77,10 +86,10 @@ class ConnectionManager {
 
         // -- Remove the hook from the map
         switch (type) { 
-            case 'start': 
+            case 'startConnection': 
                 this.startHooks.delete(id); break;
 
-            case 'end': 
+            case 'endConnection': 
                 this.endHooks.delete(id); break;
         }
 
@@ -88,9 +97,118 @@ class ConnectionManager {
         return true;
     }
     
-    // ----[ HOOKS ]---- //
+    // #endregion | ----[ HOOKS ]---- 
 
 
+    // #region | ----[ CONNECTIONS ]----
+    private connectionMap: ConnectionManager.TConnectionMap = new Map();
+    private connectionPointers: ConnectionManager.TConnectionPointersMap = new Map();
+    
+
+    /**
+     * @name getConnection
+     * @description Gets a connection from the connection manager, where the ID of the 
+     * connection is the origin and the retuned object is the destination.
+     * @param {GUID} id The id of the connection to get
+     * @returns {ConnectionManager.TConneection | null} The connection or null if not found
+     */
+    public getConnection = (id: GUID): ConnectionManager.TConneection | null => 
+        this.connectionMap.get(id) || null;
+
+
+    /**
+     * @name testCompatibility
+     * @description Tests if a connection is possible between two nodes
+     * @param {GUID} origin The origin node
+     * @param {GUID} destination The destination node   
+     * @returns {boolean} True if the connection is possible
+     */
+    public testCompatibility(origin: GUID, destination: GUID): boolean {
+        // -- Check if the conections is between the same nodes
+        if (origin.equals(destination)) return false;
+
+        // -- Attempt to get the origin and destination nodes
+        const originRef = this.getNode(origin),
+            destinationRef = this.getNode(destination);
+
+        // -- Check if the origin and destination were found
+        if (!originRef || !destinationRef) return false;
+
+        // -- Check if the connections belong to the same parent
+        if (originRef.ids.parent.equals(destinationRef.ids.parent))
+            return false;
+
+        // -- Check if the user is trying to connect two nodes of the same type
+        if (originRef.getMode() === destinationRef.getMode()) 
+            return false;       
+        
+        // -- Check if the connection already exists
+        if (this.connectionPointers.get(origin).has(destination)) 
+            return false;
+
+        // -- Check for compatibility       
+        if (originRef.isCompatible(destinationRef) === false)
+            return false;   
+       
+        // -- Return true as the connection is possible
+        return true;
+    }
+
+    
+    /**
+     * @name addConnection
+     * @description Adds a connection to the connection manager
+     * 
+     * @param {GUID} origin The origin of the connection
+     * @param {GUID} destination The destination of the connection
+     * 
+     * @returns {GUID | null} The id of the connection or null if the connection failed
+     */
+    public addConnection(origin: GUID, destination: GUID): GUID | null {
+        // -- Check if the connection is possible
+        if(this.testCompatibility(origin, destination) === false) 
+            return null;
+        
+        // -- Generate a new id for the connection
+        const id = new GUID();
+
+        // -- Set a reference to the connection
+        this.connectionPointers.get(origin).set(destination, id);
+        this.connectionPointers.get(destination).set(origin, id);
+
+        // -- Add the connection to the map 
+        this.connectionMap.set(id, [
+            origin, destination
+        ]);
+        
+        // -- Return true as the connection was added
+        return id;
+    }
+
+
+    /**
+     * @name removeConnection
+     * @description Removes a connection from the connection manager
+     * @param {GUID} id The id of the connection to remove
+     * @returns {boolean} True if the connection was removed
+     */
+    public removeConnection = (id: GUID): boolean => {  
+        // -- Attempt to get the connection
+        const connection = this.getConnection(id);
+
+        // -- Check if the connection was found
+        if (!connection) return false;  
+
+        // -- Remove the connection from the map
+        this.connectionMap.delete(id);
+
+        // -- Return true as the connection was removed
+        return true;
+    }
+    // #endregion | ----[ CONNECTIONS ]----
+
+
+    // #region | ----[ NODE ]----
     /**
      * @name getNode
      * @param {GUID} id The id of the node
@@ -120,13 +238,21 @@ class ConnectionManager {
         if (parent) parent.delete(ref.ids.self);
 
         this.nodeMap.delete(id);
-        //TODO: Remove the node from any connections
+        const connections = this.connectionPointers.get(id);
+
+        // -- Remove the connections from the map
+        connections.forEach((connectionId: GUID) => 
+            this.removeConnection(connectionId));
 
         // -- Remove the node from the parent map
         return true;
     }
-    private nodeMap: ConnectionManager.TNodeMap = new Map();        
 
+    private nodeMap: ConnectionManager.TNodeMap = new Map();        
+    // #endregion | ----[ NODE ]----
+
+
+    // #region | ----[ PARENT ]----
     /**
      * @name getParent
      * @param {GUID} id  The id of the parent group
@@ -139,14 +265,14 @@ class ConnectionManager {
      * @name removeParent
      * @description Removes a parent from the parent map including all of its children and connections
      * @param {GUID} id  The id of the parent group
-     * @returns {boolean} True if the parent was removed
+     * @returns {void | null} True if the parent was removed
      */
-    public removeParent(id: GUID): boolean {
+    public removeParent(id: GUID): void | null {
         // -- Attempt to get the parent 
         const ref = this.getParent(id);
 
         // -- Check if the parent was found
-        if (!ref) return false;
+        if (!ref) return null;
 
         // -- Loop through the children and remove them     
         ref.forEach(n => this.removeNode(n.get()));
@@ -155,11 +281,13 @@ class ConnectionManager {
         this.parentMap.delete(id);
 
         // -- Return true as the parent was removed 
-        return true;
+        return void 0;
     }
-    private parentMap: ConnectionManager.TParentMap = new Map();    
+    private parentMap: ConnectionManager.TParentMap = new Map();        
+    // #endregion | ----[ PARENT ]----
 
 
+    // #region | ----[ ORIGIN AND TARGET ]----
     /**
      * @name getOrigin
      * @description Returns the origin node of the connection is currently being drawn
@@ -179,12 +307,10 @@ class ConnectionManager {
     private targetNode: ConnectionNode.INode | null = null;
     private setTarget(node: ConnectionNode.INode) { this.targetNode = node; }
     private clearTarget() { this.targetNode = null; }
+    // #endregion | ----[ ORIGIN AND TARGET ]----
 
-    private readonly opts: ConnectionManager.IConstructor;
-    public constructor(opts: ConnectionManager.IConstructor) {
-        this.opts = opts;
-    }
 
+    // #region | ----[ ANNOUNCE ]----
     public announce(node: ConnectionNode.INode): void {
         let mouse: Geometric.TPoint = { x: 0, y: 0 };
 
@@ -194,6 +320,7 @@ class ConnectionManager {
         };
 
         this.nodeMap.set(node.ids.self, ref); 
+        this.connectionPointers.set(node.ids.self, new Map());
         this.insertParent(node.ids.parent, ref);
 
         // -- Make sure that the target node cannot be
@@ -229,10 +356,8 @@ class ConnectionManager {
 
 
         node.hooks.dragEnd(() => {      
-
-            // -- Check if the mouse is over a node
-            const origin = node,
-                target = this.getTarget();
+            // -- Get the target node
+            const target = this.getTarget();
 
             // -- Send out a drag end event
             this.execEndHooks(ref, {
@@ -240,25 +365,18 @@ class ConnectionManager {
                 id: target?.ids.self,
             });
 
-            // -- make sure the node dosent belong to the same group
-            if (target && !target.ids.parent.equals(origin.ids.parent)) {
+            // -- Attempt to add the connection
+            this.addConnection(node.ids.self, this.getTarget()?.ids.self);
 
-                // -- Make sure that that out != out and in != in
-                if (origin.getMode() === target.getMode())
-                    return this.clearOrigin();
-
-                // -- Check compatibility
-                if (origin.isCompatible(target) === true) {
-                    // -- Create a new connection
-                    console.log('Connection created');
-                }
-            }
-
-            // -- Clear the origin
+            // -- Clear the origin and target
             this.clearOrigin();
+            this.clearTarget();
         });
     }
+    // #endregion | ----[ ANNOUNCE ]----
 
+
+    // #region | ----[ MISC ]----
     // -- Internal function that inserts a node into the parent map
     // or creates a new map if it does not exist
     private insertParent(id: GUID, child: ConnectionNode.TReferance) {
@@ -270,6 +388,7 @@ class ConnectionManager {
         // -- If it is, just set the child in the map
         parent.set(child.id, child);
     }
+    // #endregion | ----[ MISC ]----
 }
 
 export default ConnectionManager;

@@ -21,7 +21,7 @@ export namespace Geometric {
         y: Y;
     }
 
-
+ 
     export type Width = number;
     export type Height = number;
 
@@ -101,9 +101,14 @@ export namespace Geometric {
      * @name TIDs
      * 
      * @description A type for a connection node's IDs.
+     * 
+     * @param self: The ID of the node. 
+     * @param parent: The ID of the node's parent.
+     * @param group: The type of node (Used for serialization).
      */
     export type TIDs =  {
         parent: GUID;
+        group: GUID;
         self: GUID;
     }
 
@@ -113,7 +118,7 @@ export namespace Geometric {
      * @description A generic object type for a connection node's details.
      */
     export type TDeatails = {
-        [key: string]: string | number | boolean;
+        [key: string]: any;
     }
 
     /**
@@ -182,22 +187,22 @@ export namespace ConnectionManager {
 
 
     /**
-     * @name TStartHook
+     * @name TStartConnectionHook
      * 
      * @description A hook for when the user instantiates a connection, returns a reference to origin node.
      * @see ConnectionNode.TReferance
      */
-    export type TStartHook = (node: ConnectionNode.TReferance) => void;
+    export type TStartConnectionHook = (node: ConnectionNode.TReferance) => void;
 
 
     /**
-     * @name TEndHook
+     * @name TEndConnectionHook
      * 
      * @description A hook for when the user instantiates a connection, returns a reference
      * to the origin node and the destination node (if any).
      * @see ConnectionNode.TReferance
      */
-    export type TEndHook = (origin: ConnectionNode.TReferance, destination?: ConnectionNode.TReferance) => void;
+    export type TEndConnectionHook = (origin: ConnectionNode.TReferance, destination?: ConnectionNode.TReferance) => void;
 
 
     /**
@@ -214,21 +219,33 @@ export namespace ConnectionManager {
      * 
      * @description A type for a connection manager constructor.    
      * @see TMousePositionHook
-     * @see TStartHook
-     * @see TEndHook
+     * @see TStartConnectionHook
+     * @see TEndConnectionHook
      */
     export interface IConstructor {
         mousePositionHook: TMousePositionHook;
-        startHook?: TStartHook;
-        endHook?: TEndHook;
+        startHook?: TStartConnectionHook;
+        endHook?: TEndConnectionHook;
     }
 
-    export type TEndHookMap = Map<Pick<GUID.IGUID, 'guid'>, TEndHook>;
-    export type TStartHookMap = Map<Pick<GUID.IGUID, 'guid'>, TStartHook>;
+    export type TEndConnectionHookMap = Map<Pick<GUID.IGUID, 'guid'>, TEndConnectionHook>;
+    export type TStartConnectionHookMap = Map<Pick<GUID.IGUID, 'guid'>, TStartConnectionHook>;
     export type TLineHookMap = Map<Pick<GUID.IGUID, 'guid'>, TLineHook>;
 
-    export type THookType = 'start' | 'end' | 'line';
-    export type THookUnion = TStartHook | TEndHook | TLineHook;
+    export type THookType = 
+        'startConnection' | 
+        'endConnection' | 
+        'line' | 
+        'announcement' |
+        'connectionInitiated' |
+        'connectionTerminated';
+
+    export type THookUnion = TStartConnectionHook | TEndConnectionHook | TLineHook;
+
+    export type TConneection = [GUID, GUID.IGUID];
+
+    export type TConnectionMap = Map<GUID, TConneection>;   
+    export type TConnectionPointersMap = Map<GUID, Map<GUID, GUID>>;  
 }
 
 
