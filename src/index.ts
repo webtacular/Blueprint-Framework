@@ -1,103 +1,17 @@
 import { ConnectionNode, ConnectionManager, Geometric } from './types';
 import _GUID from './core/guid';
+import { Hooks } from './core/hooks';
 
 export class GUID extends _GUID {}
 
-class ConnectionManager {
+class ConnectionManager extends Hooks {
     // #region | ----[ CONSTRUCTOR ]----
     private readonly opts: ConnectionManager.IConstructor;
     public constructor(opts: ConnectionManager.IConstructor) {
+        super();
         this.opts = opts;
     }
     // #endregion | ----[ CONSTRUCTOR ]----    
-
-
-    // #region | ----[ HOOKS ]----
-
-    private startHooks: ConnectionManager.TStartConnectionHookMap = new Map();
-    private endHooks: ConnectionManager.TEndConnectionHookMap = new Map();
-    private lineHooks: ConnectionManager.TLineHookMap = new Map();
-
-    private execStartHooks = (ref: ConnectionNode.TReferance) =>
-        this.startHooks.forEach((hook) => hook(ref));
-
-    private execEndHooks = (origin: ConnectionNode.TReferance, destination?: ConnectionNode.TReferance) =>
-        this.endHooks.forEach((hook) => hook(origin, destination));
-
-    private execLineHooks = (origin: Geometric.TPoint, destination: Geometric.TPoint) =>
-        this.lineHooks.forEach((hook) => hook(origin, destination));
-    
-    /**
-     * @name addHook
-     * 
-     * @description Adds a hook to the connection manager
-     * 
-     * @param {ConnectionManager.THookType} type The type of the hook to add
-     * @param {ConnectionManager.THookUnion} hook The hook to add
-     * @returns {GUID} The id of the hook
-     */
-    public addHook<E extends ConnectionManager.THookUnion>(type: ConnectionManager.THookType, hook: E): GUID {
-        // -- Generate a new id for the hook
-        const id = new GUID();
-
-        // -- Add the hook to the map
-        switch (type) { 
-            case 'startConnection': this.startHooks.set(id, hook as ConnectionManager.TStartConnectionHook); break;
-            case 'endConnection'  : this.endHooks.set(  id, hook as   ConnectionManager.TEndConnectionHook); break;
-            case 'line' : this.lineHooks.set( id, hook as  ConnectionManager.TLineHook); break;
-        }
-
-        // -- Return the id 
-        return id;
-    }
-
-    /**
-     * @name getHook
-     * 
-     * @description Gets a hook from the connection manager
-     * 
-     * @param {ConnectionManager.THookType} type The type of the hook to add
-     * @param {GUID} id The id of the hook to get
-     * @returns {ConnectionManager.THookUnion} The hook
-     */
-    public getHook<E extends ConnectionManager.THookUnion>(type: ConnectionManager.THookType, id: GUID): E | null {
-        switch (type) { 
-            case 'startConnection': return this.startHooks.get(id) as E;
-            case 'endConnection': return this.endHooks.get(id) as E;
-            case 'line': return this.lineHooks.get(id) as E;    
-        }
-    }
-
-    /**
-     * @name removeHook
-     * 
-     * @description Removes a hook from the connection manager
-     * 
-     * @param {ConnectionManager.THookType} type The type of the hook
-     * @param {GUID} id The id of the hook
-     * @returns {boolean} - If the hook was removed
-     */
-    public removeHook = (type: ConnectionManager.THookType, id: GUID): boolean => {
-        // -- Attempt to get the hook
-        const hook = this.getHook(type, id);
-
-        // -- Check if the hook was found
-        if (!hook) return false;
-
-        // -- Remove the hook from the map
-        switch (type) { 
-            case 'startConnection': 
-                this.startHooks.delete(id); break;
-
-            case 'endConnection': 
-                this.endHooks.delete(id); break;
-        }
-
-        // -- Return true as the hook was removed
-        return true;
-    }
-    
-    // #endregion | ----[ HOOKS ]---- 
 
 
     // #region | ----[ CONNECTIONS ]----
@@ -223,10 +137,7 @@ class ConnectionManager {
      * @param {GUID | ConnectionNode.INode} node The id of the node or the node itself  
      * @returns {boolean} True if the node was removed
      */
-    public removeNode(node: GUID | ConnectionNode.INode): boolean {
-        // -- Get the id
-        const id = node instanceof GUID ? node : node.ids.self;
-
+    public removeNode(id: GUID): boolean {
         // -- Attempt to get the node   
         const ref = this.getNode(id);
 
@@ -275,7 +186,7 @@ class ConnectionManager {
         if (!ref) return null;
 
         // -- Loop through the children and remove them     
-        ref.forEach(n => this.removeNode(n.get()));
+        ref.forEach(n => this.removeNode(n.get().ids.self));
 
         // -- Remove the parent from the map
         this.parentMap.delete(id);
@@ -344,14 +255,13 @@ class ConnectionManager {
             this.setOrigin(node);
 
             // -- Send out a drag start event
-            this.execStartHooks(ref);
+            this.execHooks('startConnection', ref);
         });
 
 
         node.hooks.drag(() => {
-
             // -- Call all the line hooks
-            this.execLineHooks(node.hooks.rootPosition(), mouse);
+            this.execHooks('line', node.hooks.rootPosition(), mouse);
         });
 
 
@@ -360,10 +270,10 @@ class ConnectionManager {
             const target = this.getTarget();
 
             // -- Send out a drag end event
-            this.execEndHooks(ref, {
+            this.execHooks('endConnection', ref, {
                 get: () => target,
                 id: target?.ids.self,
-            });
+            });   
 
             // -- Attempt to add the connection
             this.addConnection(node.ids.self, this.getTarget()?.ids.self);

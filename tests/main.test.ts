@@ -56,7 +56,7 @@ describe('[Node: Add] - Input', () => {
     cm.announce(node);
 
     it('should add a node to the connection manager', () => {
-        expect(cm.getNode(node.ids.self).ids.self).toEqual(node.ids.self);
+        expect(cm.getNode(node.ids.self)?.ids.self).toEqual(node.ids.self);
     });
 });
 
@@ -81,7 +81,7 @@ describe('[Node: Add] - Output', () => {
     cm.announce(node);
 
     it('should add a node to the connection manager', () => {
-        expect(cm.getNode(node.ids.self).ids.self).toEqual(node.ids.self);
+        expect(cm.getNode(node.ids.self)?.ids.self).toEqual(node.ids.self);
     });
 });
 
@@ -176,26 +176,6 @@ describe('[Node: Remove] - Parent - Invalid', () => {
 });
 
 // -- Remove child node
-describe('[Node: Remove] - Child (Pass by node)', () => {
-    let cm = cmc();
-
-    const node1 = createNode('input'),
-        node2 = createNode('input');
-
-    node2.ids.parent = node1.ids.parent;
-
-    cm.announce(node1);
-    cm.announce(node2);
-    
-    it('should remove the child node', () => {
-        expect(cm.getParent(node1.ids.parent).get(node1.ids.self)).not.toBe(undefined);  
-        cm.removeNode(node1);
-        expect(cm.getParent(node1.ids.parent).get(node1.ids.self)).toBe(undefined);  
-        expect(cm.getNode(node1.ids.self)).toBe(null);
-    });
-});
-
-// -- Remove child node
 describe('[Node: Remove] - Child (Pass by id)', () => {
     let cm = cmc();
 
@@ -208,9 +188,9 @@ describe('[Node: Remove] - Child (Pass by id)', () => {
     cm.announce(node2);
     
     it('should remove the child node', () => {
-        expect(cm.getParent(node1.ids.parent).get(node1.ids.self)).not.toBe(undefined);  
+        expect(cm.getParent(node1.ids.parent)?.get(node1.ids.self)).not.toBe(undefined);  
         cm.removeNode(node1.ids.self);
-        expect(cm.getParent(node1.ids.parent).get(node1.ids.self)).toBe(undefined);  
+        expect(cm.getParent(node1.ids.parent)?.get(node1.ids.self)).toBe(undefined);  
         expect(cm.getNode(node1.ids.self)).toBe(null);
     });
 });

@@ -219,18 +219,34 @@ export namespace ConnectionManager {
      * 
      * @description A type for a connection manager constructor.    
      * @see TMousePositionHook
-     * @see TStartConnectionHook
-     * @see TEndConnectionHook
      */
     export interface IConstructor {
         mousePositionHook: TMousePositionHook;
-        startHook?: TStartConnectionHook;
-        endHook?: TEndConnectionHook;
     }
 
-    export type TEndConnectionHookMap = Map<Pick<GUID.IGUID, 'guid'>, TEndConnectionHook>;
+    /**
+     * @name TAnnouncementHook
+     * 
+     * @description A hook for when a new node is announced, returns a reference to the node.
+     * @see ConnectionNode.TReferance
+     * @see ConnectionNode.INode
+     */
+    export type TAnnouncementHook = (node: ConnectionNode.TReferance) => void;
+
+    /**
+     * @name TConnectionHook
+     * 
+     * @description A hook for when a connection is initiated / Terminated, returns a reference to the origin and destination nodes.
+     * @see ConnectionNode.TReferance       
+     * @see ConnectionNode.INode
+     */
+    export type TConnectionHook = (origin: ConnectionNode.TReferance, destination: ConnectionNode.TReferance) => void; 
+
+    export type TEndConnectionHookMap   = Map<Pick<GUID.IGUID, 'guid'>, TEndConnectionHook>;
     export type TStartConnectionHookMap = Map<Pick<GUID.IGUID, 'guid'>, TStartConnectionHook>;
-    export type TLineHookMap = Map<Pick<GUID.IGUID, 'guid'>, TLineHook>;
+    export type TLineHookMap            = Map<Pick<GUID.IGUID, 'guid'>, TLineHook>;
+    export type TAnnouncementHookMap    = Map<Pick<GUID.IGUID, 'guid'>, TAnnouncementHook>;
+    export type TConnectionStatusMap    = Map<Pick<GUID.IGUID, 'guid'>, TConnectionHook>;
 
     export type THookType = 
         'startConnection' | 
@@ -240,12 +256,20 @@ export namespace ConnectionManager {
         'connectionInitiated' |
         'connectionTerminated';
 
-    export type THookUnion = TStartConnectionHook | TEndConnectionHook | TLineHook;
+    export type THookUnion = 
+        TStartConnectionHook | 
+        TEndConnectionHook | 
+        TLineHook |
+        TAnnouncementHook |
+        TConnectionHook;
 
     export type TConneection = [GUID, GUID.IGUID];
-
     export type TConnectionMap = Map<GUID, TConneection>;   
     export type TConnectionPointersMap = Map<GUID, Map<GUID, GUID>>;  
+
+    export interface IInstance {
+        // -- Hooks
+    }
 }
 
 
