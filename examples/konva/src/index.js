@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import bp, { GUID } from '../../src/index';  // <[Blueprint framework]>
+import bp, { GUID } from '../../../dist/src';  // <[Blueprint framework]>
 
 // -- Create the stage
 const stage = new Konva.Stage({
@@ -9,7 +9,7 @@ const stage = new Konva.Stage({
 });
 
 // -- Create and add the layer
-const layer = new Konva.Layer();
+const layer = new Konva.Layer(); 
 stage.add(layer);
 
 
@@ -26,9 +26,9 @@ const manager = new bp({
 // A NODE is an object that a connection can be attached to,
 // and a connection can be madefrom.
 class node {
-    elm: Konva.Node;
+    elm;
     // -- Class constructor 
-    constructor(elm: Konva.Circle) {
+    constructor(elm) {
         this.elm = elm;
     }
 
@@ -41,7 +41,7 @@ class node {
     // -- A hook that is called when a connection is made
     // to or from this node, it is used to determine if
     // the connection should be allowed.
-    isCompatible = (node: node) => {        
+    isCompatible = (node) => {        
         true;
     }
 
@@ -65,22 +65,22 @@ class node {
     // for the connection manager to know how to interact with this node.
     hooks = {
         // -- drag, a hook that is called when the node is dragged
-        drag: (f: any) => this.elm.on('dragmove', f),
+        drag: (f) => this.elm.on('dragmove', f),
 
         // -- dragEnd, a hook that is called once at the end of a drag event
-        dragEnd: (f: any) => this.elm.on('dragend', f),
+        dragEnd: (f) => this.elm.on('dragend', f),
 
         // -- dragStart, a hook that is called once when the node is dragged
-        dragStart: (f: any) => this.elm.on('dragstart', f),
+        dragStart: (f) => this.elm.on('dragstart', f),
 
         // -- Mouse events, Self explanatory
-        click: (f: any) => this.elm.on('click', f),
-        dblClick: (f: any) => this.elm.on('dblclick', f),
+        click: (f) => this.elm.on('click', f),
+        dblClick: (f) => this.elm.on('dblclick', f),
 
         // -- MouseLeave/Enter Are used to determine if the mouse is
         // hovering over this node.
-        mouseEnter: (f: any) => {
-            document.addEventListener('mousemove', (e: any) => {
+        mouseEnter: (f) => {
+            document.addEventListener('mousemove', () => {
                 // Get the current mouse position
                 const mouse_pos = stage.getPointerPosition();
 
@@ -100,7 +100,7 @@ class node {
                 }
             });
         },
-        mouseLeave: (f: any) => this.elm.on('mouseleave', f),
+        mouseLeave: (f) => this.elm.on('mouseleave', f),
 
         // -- Rootposition is a hook that returns the position
         // from where the connection should start at.
@@ -118,7 +118,7 @@ class node {
 // like konva.
 //
 
-function create_blueprint(mode: 'input' | 'output', color: string) {
+function create_blueprint(mode, color) {
     // Lets create a 'blueprint element'
     const elm_1_id = new GUID(),
         // THIS is the element that visually contains all of its nodes
@@ -158,7 +158,7 @@ function create_blueprint(mode: 'input' | 'output', color: string) {
 
     
     // -- Create the node
-    const node_elm_1 = new node(elm_1_node as any);
+    const node_elm_1 = new node(elm_1_node);
 
     // -- Set the parent ID 
     node_elm_1.ids.parent = elm_1_id;
@@ -176,8 +176,8 @@ let a = create_blueprint('input', 'red');
 let b = create_blueprint('output', 'blue');
 
 // -- We need to add the nodes to the manager
-manager.announce(a as any);
-manager.announce(b as any);
+manager.announce(a);
+manager.announce(b);
 
 
 // -- Create the line
@@ -192,7 +192,7 @@ layer.add(line)
 
 // -- Lets hook onto the line hook, this hook is called
 // every time the line is updated.
-manager.addHook('line', (start: any, end: any) => {
+manager.addHook('line', (start, end) => {
     line.points([start.x, start.y, end.x, end.y]);
 });
 
@@ -200,7 +200,7 @@ manager.addHook('line', (start: any, end: any) => {
 // -- ONCE the user has made a connection, we need to
 // Hide the temporary line and show the permanent line
 // If the connection is valid.
-manager.addHook('endConnection', (a: any, b: any) => {
+manager.addHook('endConnection', (a, b) => {
     console.log('Connection ended!', a, b);
 
     // -- reset the line
