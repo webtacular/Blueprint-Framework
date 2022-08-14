@@ -1,7 +1,14 @@
-import { ConnectionNode, ConnectionManager, Geometric } from './types';
-import _GUID from './core/guid';
-import { Hooks } from './core/hooks';
+import { 
+    Hooks 
+} from './core/hooks';
 
+import { 
+    ConnectionNode, 
+    ConnectionManager, 
+    Geometric 
+} from './types';
+
+import _GUID from './core/guid';
 export class GUID extends _GUID {}
 
 class ConnectionManager extends Hooks {

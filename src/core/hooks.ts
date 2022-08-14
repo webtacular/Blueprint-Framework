@@ -1,5 +1,12 @@
-import { GUID } from "..";
-import { ConnectionManager, ConnectionNode, Geometric } from "../types";
+import { 
+    GUID 
+} from "..";
+
+import { 
+    ConnectionManager, 
+    ConnectionNode, 
+    Geometric 
+} from "../types";
 
 export class Hooks {
 
