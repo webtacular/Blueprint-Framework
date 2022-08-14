@@ -224,3 +224,5 @@ manager.addHook('endConnection', (a, b) => {
     // -- draw the layer
     layer.draw();
 });
+
+console.log(manager.serialize());

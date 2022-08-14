@@ -9,10 +9,17 @@ import {
 } from './types';
 
 import _GUID from './core/guid';
+import { serialize } from './core/serialization';
 export class GUID extends _GUID {}
 
 class ConnectionManager extends Hooks {
     // #region | ----[ CONSTRUCTOR ]----
+    private nodeMap: ConnectionManager.TNodeMap = new Map();        
+    private parentMap: ConnectionManager.TParentMap = new Map();      
+    
+    private connectionMap: ConnectionManager.TConnectionMap = new Map();
+    private connectionPointers: ConnectionManager.TConnectionPointersMap = new Map();
+
     private readonly opts: ConnectionManager.IConstructor;
     public constructor(opts: ConnectionManager.IConstructor) {
         super();
@@ -22,10 +29,6 @@ class ConnectionManager extends Hooks {
 
 
     // #region | ----[ CONNECTIONS ]----
-    private connectionMap: ConnectionManager.TConnectionMap = new Map();
-    private connectionPointers: ConnectionManager.TConnectionPointersMap = new Map();
-    
-
     /**
      * @name getConnection
      * @description Gets a connection from the connection manager, where the ID of the 
@@ -165,8 +168,6 @@ class ConnectionManager extends Hooks {
         // -- Remove the node from the parent map
         return true;
     }
-
-    private nodeMap: ConnectionManager.TNodeMap = new Map();        
     // #endregion | ----[ NODE ]----
 
 
@@ -201,7 +202,6 @@ class ConnectionManager extends Hooks {
         // -- Return true as the parent was removed 
         return void 0;
     }
-    private parentMap: ConnectionManager.TParentMap = new Map();        
     // #endregion | ----[ PARENT ]----
 
 
@@ -291,6 +291,40 @@ class ConnectionManager extends Hooks {
         });
     }
     // #endregion | ----[ ANNOUNCE ]----
+
+
+    // #region | ----[ SERIALIZATION ]----
+    /**
+     * @name serialize
+     * 
+     * @description Serializes the connection manager into a JSON object
+     * 
+     * @returns {string} The serialized JSON object
+     */
+    public serialize(): string {
+        const serializedObject = serialize(
+            this.connectionMap,
+            this.nodeMap,
+            this.parentMap,
+        );
+
+        return JSON.stringify(serializedObject);
+    }
+
+
+    /**
+     * @name serializeAsync
+     * 
+     * @description Serializes the connection manager into a JSON object
+     * 
+     * @returns {Promise<string>} The serialized JSON object        
+     */ 
+    public serializeAsync(): Promise<string> {
+        return new Promise((resolve) => {
+            resolve(this.serialize());
+        });
+    }
+    // #endregion | ----[ SERIALIZATION ]----       
 
 
     // #region | ----[ MISC ]----
