@@ -6,11 +6,11 @@ import {
     Serialization 
 } from '../types';
 
-export function serialize(
+export default (
     connectionsMap: ConnectionManager.TConnectionMap,
     nodeMap: ConnectionManager.TNodeMap,
     parentMap: ConnectionManager.TParentMap
-): Serialization.TSerializedObject {
+): Serialization.TSerializedObject => {
     
     const groups: Array<GUID> = [],
         nodes: Array<Serialization.TSerializedNode> = [],   
@@ -46,12 +46,28 @@ export function serialize(
         // -- Get the ids of its children
         const childrenIds: Array<GUID> = [];
 
+        let attributes: ConnectionNode.TAttributes = null;
+
         // -- Iterate over the children
-        children.forEach((child) => childrenIds.push(child.id)); 
+        children.forEach((child) => {
+            // -- Check if attributes are set 
+            if (attributes === null) { 
+
+                // Get the child
+                const node = child.get();
+
+                // -- Attempt to get the parent attributes
+                attributes = node?.getParentAttributes();
+            }
+
+            // -- Push the child id
+            childrenIds.push(child.id);
+        }); 
 
         // -- Push the parent
         parents.push({  
             id: id, 
+            attributes,
             children: childrenIds
         });
     });

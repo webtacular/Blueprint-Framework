@@ -109,6 +109,16 @@ class node {
             return { x, y };
         }
     }
+
+    getParentAttributes = () => {
+        return {
+            a: 'b',
+            pos: {
+                x: 0,
+                y: 0    
+            }
+        }
+    }
 }
 
 //
@@ -173,6 +183,7 @@ function create_blueprint(mode, color) {
 
 // Create our blueprint elements
 let a = create_blueprint('input', 'red');
+
 let b = create_blueprint('output', 'blue');
 
 // -- We need to add the nodes to the manager
@@ -225,4 +236,9 @@ manager.addHook('endConnection', (a, b) => {
     layer.draw();
 });
 
-console.log(manager.serialize());
+const ser = manager.serialize();
+
+console.log(ser);
+
+
+manager.deserialize('ser');   

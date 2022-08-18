@@ -113,12 +113,20 @@ export namespace Geometric {
     }
 
     /**
-     * @name TDeatails
+     * @name TAttributes
      * 
      * @description A generic object type for a connection node's details.
      */
-    export type TDeatails = {
-        [key: string]: string | number | boolean | null | undefined | GUID;
+    export type TAttributes = {
+        [key: string]: 
+            string | 
+            number | 
+            boolean | 
+            null | 
+            undefined | 
+            GUID |
+            Geometric.TSize |
+            Geometric.TPoint;
     }
 
     /**
@@ -135,8 +143,9 @@ export namespace Geometric {
      */
     interface INode {
         getMode: () => TMode;
+        getParentAttributes?: () => TAttributes;
         isCompatible: (node: INode) => boolean;
-        attributes: TDeatails;
+        attributes: TAttributes;
         hooks: INodeHooks;
         ids: TIDs;
     }
@@ -279,13 +288,12 @@ export namespace Serialization {
         parent: GUID;
         group: GUID;
         position: Geometric.TPoint;
-        attributes: {  
-            [key: string]: string | number | boolean | null | undefined | GUID;
-        };
+        attributes: ConnectionNode.TAttributes;
     }
 
     export type TSerializedParent = {
         id: Pick<GUID.IGUID, "guid">;
+        attributes: ConnectionNode.TAttributes;
         children: Array<GUID>;
     }
 
@@ -300,6 +308,15 @@ export namespace Serialization {
         nodes: Array<TSerializedNode>;
         connections: Array<TSerializedConnection>;   
     }
+
+    export type IDeserializedObject = {
+        nodeMap: ConnectionManager.TNodeMap;
+        parentMap: ConnectionManager.TParentMap;
+        connectionMap: ConnectionManager.TConnectionMap;
+        connectionPointersMap: ConnectionManager.TConnectionPointersMap;
+    }
+
+    export type TPopulateNode = (arg: TSerializedNode) => ConnectionNode.INode;
 }
 
 

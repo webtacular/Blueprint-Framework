@@ -5,11 +5,13 @@ import {
 import { 
     ConnectionNode, 
     ConnectionManager, 
-    Geometric 
+    Geometric, 
+    Serialization
 } from './types';
 
 import _GUID from './core/guid';
-import { serialize } from './core/serialization';
+import Serialize from './core/serialization';
+import Deserialize from './core/deseriallization';
 export class GUID extends _GUID {}
 
 class ConnectionManager extends Hooks {
@@ -18,7 +20,7 @@ class ConnectionManager extends Hooks {
     private parentMap: ConnectionManager.TParentMap = new Map();      
     
     private connectionMap: ConnectionManager.TConnectionMap = new Map();
-    private connectionPointers: ConnectionManager.TConnectionPointersMap = new Map();
+    private connectionPointersMap: ConnectionManager.TConnectionPointersMap = new Map();
 
     private readonly opts: ConnectionManager.IConstructor;
     public constructor(opts: ConnectionManager.IConstructor) {
@@ -67,7 +69,7 @@ class ConnectionManager extends Hooks {
             return false;       
         
         // -- Check if the connection already exists
-        if (this.connectionPointers.get(origin).has(destination)) 
+        if (this.connectionPointersMap.get(origin).has(destination)) 
             return false;
 
         // -- Check for compatibility       
@@ -97,8 +99,8 @@ class ConnectionManager extends Hooks {
         const id = new GUID();
 
         // -- Set a reference to the connection
-        this.connectionPointers.get(origin).set(destination, id);
-        this.connectionPointers.get(destination).set(origin, id);
+        this.connectionPointersMap.get(origin).set(destination, id);
+        this.connectionPointersMap.get(destination).set(origin, id);
 
         // -- Add the connection to the map 
         this.connectionMap.set(id, [
@@ -159,7 +161,7 @@ class ConnectionManager extends Hooks {
         if (parent) parent.delete(ref.ids.self);
 
         this.nodeMap.delete(id);
-        const connections = this.connectionPointers.get(id);
+        const connections = this.connectionPointersMap.get(id);
 
         // -- Remove the connections from the map
         connections.forEach((connectionId: GUID) => 
@@ -238,7 +240,7 @@ class ConnectionManager extends Hooks {
         };
 
         this.nodeMap.set(node.ids.self, ref); 
-        this.connectionPointers.set(node.ids.self, new Map());
+        this.connectionPointersMap.set(node.ids.self, new Map());
         this.insertParent(node.ids.parent, ref);
 
         // -- Make sure that the target node cannot be
@@ -302,7 +304,7 @@ class ConnectionManager extends Hooks {
      * @returns {string} The serialized JSON object
      */
     public serialize(): string {
-        const serializedObject = serialize(
+        const serializedObject = Serialize(
             this.connectionMap,
             this.nodeMap,
             this.parentMap,
@@ -324,6 +326,27 @@ class ConnectionManager extends Hooks {
             resolve(this.serialize());
         });
     }
+
+
+    /**
+     * @name deserialize
+     * 
+     * @description Deserializes the connection manager from a JSON object  
+     * 
+     * @param {string} json  The JSON object to deserialize
+     * 
+     * @returns {void}
+     */
+    public deserialize(json: string, populateHook: Serialization.TPopulateNode): void {
+        // -- Try to desrialize the JSON
+        const deserializedObject = Deserialize(json, populateHook);
+
+        // -- CHeck if the deserialization was successful
+        if (!deserializedObject) {
+            throw new Error('The serialized object could not be deserialized'); 
+        }
+    }
+
     // #endregion | ----[ SERIALIZATION ]----       
 
 
