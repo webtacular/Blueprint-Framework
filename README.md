@@ -15,24 +15,24 @@ A simple framework for building interactive Unreal Engine like blueprint editors
 ## Installation
 
 ```bash
-	npm install blueprint-framework
+npm install blueprint-framework
 ```
   
 
 ### Or
 
 ```sh
-	# Clone the repository
-	git clone https://github.com/webtacular/Blueprint-Framework.git
+# Clone the repository
+git clone https://github.com/webtacular/Blueprint-Framework.git
 
-	# Navigate to the directory
-	cd Blueprint-Framework
+# Navigate to the directory
+cd Blueprint-Framework
 
-	# Install the dependencies
-	npm install
+# Install the dependencies
+npm install
 
-	# Build the project
-	npm run build
+# Build the project
+npm run build
 ```
 
 
