@@ -49,20 +49,20 @@ You can find a set of examples [here](https://github.com/webtacular/Blueprint-Fr
 Import dependencies.
 
 ```js
-	import manager, { GUID } from 'blueprint-framework';
-	// OR //
-	const manager = require('blueprint-framework');
+import manager, { GUID } from 'blueprint-framework';
+// OR //
+const manager = require('blueprint-framework');
 ```
   
 Set up the manager, The manager is responsible for verifying, maintaining, modifying, serializing nodes.  
 ### Manager - [Parameters](https://github.com/webtacular/Blueprint-Framework/blob/1669bdeedaa2ac95a2d53aa1db07a1a22f04307b/src/types.d.ts#L225)
 -  [mousePositionHook](https://github.com/webtacular/Blueprint-Framework/blob/1669bdeedaa2ac95a2d53aa1db07a1a22f04307b/src/types.d.ts#L19) - A Function that returns the current Position of the mouse.
 ```js
-	const man = new manager({
-		// -- All the manager needs to function is a have a 
-		// 	  Function passed into it that returns the current
-		// 	  Position of the mouse. { x: number, y: number }
-		mousePositionHook: () => layer.getRelativePointerPosition()
-	});
+const man = new manager({
+	// -- All the manager needs to function is a have a 
+	// 	  Function passed into it that returns the current
+	// 	  Position of the mouse. { x: number, y: number }
+	mousePositionHook: () => layer.getRelativePointerPosition()
+});
 ```
 
