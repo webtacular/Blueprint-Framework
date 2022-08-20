@@ -316,7 +316,7 @@ export namespace Serialization {
         connectionPointersMap: ConnectionManager.TConnectionPointersMap;
     }
 
-    export type TPopulateNode = (arg: TSerializedNode) => ConnectionNode.INode;
+    export type TPopulateNode = (arg: TSerializedNode, parent: TSerializedParent) => ConnectionNode.INode;
 }
 
 

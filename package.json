@@ -22,7 +22,7 @@
   },
   "name": "blueprint-framework",
   "description": "A simple framework for building interactive Unreal Engine like blueprint editors in the browser.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "test": "jest",
     "dev": "nodemon src/index.ts",
